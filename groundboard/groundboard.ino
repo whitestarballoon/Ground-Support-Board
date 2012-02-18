@@ -1,8 +1,10 @@
+
 byte MyAddress = 0x01;  //My i2c address
 byte Target = 0x00;  	// who i will be talking to
 //all the bytes ALL THE BYTES
 byte command[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; 
 int commandlength = 0; //how many bytes i actually use
+int serialClaimedLen = 0;
 #include <Wire.h> // the part that makes i2c work without all that painful stuff
 
 void setup() //setup all the things that need to be done
@@ -62,26 +64,32 @@ void sendCommand(){
 }
 
 void parseSerial(){
-	if (Serial.available() > 0)  				//if you have data start doing stuff
-	{			
-		if ( 0 == commandlength )				//if it is a new dataset get the header
-		{	
-			commandlength = Serial.read(); 	//message length number of bytes excluding this byte
+	if (Serial.available()) 				//if you have data start doing stuff
+            delay(300);  //  wait for all serial data to come in to buffer
+            serialClaimedLen = Serial.available();  //Save the claimed serial len
+	{	
+  	      commandlength = Serial.read(); 	//message length number of bytes excluding this byte
+              if (commandlength == serialClaimedLen-1) {   //Check to see if serial data available is the same len as the first byte says it should be
+                          		
+
+
 			Target = Serial.read(); 		//target device address
 			commandlength--;				// already took 1 thing
-		}
-		for ( int step=0; step = (commandlength-1); step++ )	//do until you have no stuff
+		
+		for ( int n = 0; n < commandlength; n++ )	//do until you have no stuff
 		{	
-			//make sure that you have as much data as you hoped
-			if (Serial.available() > 0 && step < commandlength )	
-			{
-				command[commandlength] = Serial.read();  			//read the serial until you have it
-			}
-			else
-			{
-				Serial.println("NACK");						//haha fail
-			}
+		
+				command[n] = Serial.read();  			//read the serial until you have it
+			
+
 		}
 		Serial.println("ACK");							//YAY you win
+              }
+              else {  
+               Serial.println("NACK");						//haha fail
+               commandlength = 0;
+               serialClaimedLen = 0;
+              }
 	}
+
 }
