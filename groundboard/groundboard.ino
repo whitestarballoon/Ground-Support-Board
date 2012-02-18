@@ -1,5 +1,5 @@
 
-byte MyAddress = 0x01;  //My i2c address
+byte MyAddress = 0x07;  //My i2c address
 byte Target = 0x00;  	// who i will be talking to
 //all the bytes ALL THE BYTES
 byte command[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; 
