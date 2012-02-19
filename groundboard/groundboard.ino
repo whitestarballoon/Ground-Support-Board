@@ -7,6 +7,7 @@ byte command[] = {
 int commandlength = 0; //how many bytes i actually use
 int serialClaimedLen = 0;
 #include <Wire.h> // the part that makes i2c work without all that painful stuff
+int request = 0;
 
 void setup() //setup all the things that need to be done
 {
@@ -18,9 +19,16 @@ void setup() //setup all the things that need to be done
 
 void loop()
 {
-  sendCommand();  	//send the stuff to i2c target
   parseSerial(); 	//get stuff from the computer
-}
+  if ( 0 == request )
+  {
+    sendCommand();  	//send the stuff to i2c target
+  }
+  else if ( 1 == request && 0 != commandlength )
+  {
+    sendRequest();	
+  }
+}	
 
 void receiveEvent(int howMany) //i2c recieve then spew to the serial port
 {
@@ -31,6 +39,22 @@ void receiveEvent(int howMany) //i2c recieve then spew to the serial port
     Serial.write(Wire.read()); 	// print the byte
   }
   Serial.println();
+}
+
+void sendRequest()
+{ 
+  byte requestlength = command[0];
+  Wire.requestFrom(Target,requestlength);  
+  Serial.println("Grequest");
+  if(requestlength <= Wire.available() || 0 != requestlength )    
+  {
+    while( 0 == Wire.available() )
+    {
+      Serial.print(Wire.read());
+    }	
+    request = 0;
+    Serial.println();	
+  }
 }
 
 void sendCommand(){
@@ -76,10 +100,14 @@ void parseSerial(){
     serialClaimedLen = Serial.available();  //Save the claimed serial len
 
     commandlength = Serial.read(); 	//message length number of bytes excluding this byte
-    if ((commandlength == serialClaimedLen-1) && (commandlength > 1)) {   //Check to see if serial data available is the same len as the first byte says it should be
+    if ( 0 == commandlength )
+    {
+      request = 1;
+      Serial.println("GSACK");
 
+    }
 
-
+    else if ((commandlength == serialClaimedLen-1) && (commandlength > 1)) {   //Check to see if serial data available is the same len as the first byte says it should be
       Target = Serial.read(); 		//target device address
       commandlength--;				// already took 1 thing
 
@@ -96,7 +124,7 @@ void parseSerial(){
     }
     else {  
       while(0 != Serial.available()){
-       Serial.read(); 
+        Serial.read(); 
       }
       Serial.println("GSNACK");						//haha fail
       commandlength = 0;
@@ -105,5 +133,6 @@ void parseSerial(){
   }
 
 }
+
 
 
